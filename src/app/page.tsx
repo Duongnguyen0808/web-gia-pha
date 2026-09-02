@@ -38,27 +38,27 @@ export default function Home() {
     setAvatars(savedAvatars);
   }, []);
 
-  // Tự động thu nhỏ vừa màn hình trên PC khi vừa vào
+  // Tự động điều chỉnh khi xoay điện thoại hoặc mở trên PC
   useEffect(() => {
-    if (window.innerWidth < 1024) {
-      setIsTreeReady(true);
-      return;
-    }
-    
     const container = treeContainerRef.current;
     const scrollArea = treeScrollAreaRef.current;
     if (!container || !scrollArea) return;
 
     const observer = new ResizeObserver(() => {
+      // Nếu là điện thoại đang cầm dọc (chiều ngang nhỏ hơn chiều dọc và < 768px)
+      // thì giữ nguyên kích thước gốc để vuốt
+      if (window.innerWidth < 768 && window.innerHeight >= window.innerWidth) {
+        setTreeScale(1);
+        setIsTreeReady(true);
+        return;
+      }
+
+      // Nếu là PC hoặc điện thoại đang XOAY NGANG -> Thu nhỏ vừa màn hình
       const treeWidth = scrollArea.scrollWidth;
-      const treeHeight = scrollArea.scrollHeight;
       const containerWidth = container.clientWidth;
-      const containerHeight = window.innerHeight - container.offsetTop;
       
       let newScale = 1;
-      if (treeWidth > 0 && treeHeight > 0) {
-        // Chỉ thu nhỏ để vừa khít chiều ngang (không cần kéo trái phải)
-        // Bỏ giới hạn chiều dọc để cây to hơn và người dùng có thể cuộn dọc
+      if (treeWidth > 0) {
         const scaleX = (containerWidth - 40) / treeWidth;
         newScale = Math.min(scaleX, 1);
       }
@@ -68,6 +68,7 @@ export default function Home() {
     });
     
     observer.observe(scrollArea);
+    observer.observe(container);
     
     return () => observer.disconnect();
   }, [isMounted]);
