@@ -18,7 +18,6 @@ export default function Home() {
   const [selectedMe, setSelectedMe] = useState<number | null>(null);
   const [activePerson, setActivePerson] = useState<any | null>(null);
   const [avatars, setAvatars] = useState<Record<number, string>>({});
-  const [treeScale, setTreeScale] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const treeScrollAreaRef = useRef<HTMLDivElement>(null);
@@ -37,74 +36,7 @@ export default function Home() {
     setAvatars(savedAvatars);
   }, []);
 
-  // Auto-fit khi load + cho phép zoom tùy thích
-  const initialScaleRef = useRef<number>(1);
-
-  const fitToScreen = () => {
-    if (treeContainerRef.current && treeScrollAreaRef.current) {
-      treeScrollAreaRef.current.style.transform = 'scale(1)';
-      treeScrollAreaRef.current.style.transformOrigin = 'top center';
-      const treeWidth = treeScrollAreaRef.current.scrollWidth;
-      const treeHeight = treeScrollAreaRef.current.scrollHeight;
-      const containerWidth = treeContainerRef.current.clientWidth;
-      const containerHeight = window.innerHeight - treeContainerRef.current.offsetTop;
-
-      const scaleX = treeWidth > containerWidth ? (containerWidth - 20) / treeWidth : 1;
-      const scale = scaleX; // Chỉ thu nhỏ vừa chiều ngang trên laptop để không bị quá nhỏ
-      initialScaleRef.current = scale;
-      setTreeScale(scale);
-    }
-  };
-
-  useEffect(() => {
-    // Đợi cây render ổn định rồi mới fit
-    let lastWidth = 0;
-    let stableCount = 0;
-    const pollInterval = setInterval(() => {
-      if (treeScrollAreaRef.current) {
-        const currentWidth = treeScrollAreaRef.current.scrollWidth;
-        if (currentWidth > 0 && currentWidth === lastWidth) {
-          stableCount++;
-          if (stableCount >= 3) {
-            clearInterval(pollInterval);
-            fitToScreen();
-          }
-        } else {
-          stableCount = 0;
-          lastWidth = currentWidth;
-        }
-      }
-    }, 200);
-
-    const fallbackTimer = setTimeout(() => {
-      clearInterval(pollInterval);
-      fitToScreen();
-    }, 5000);
-
-    // Scroll wheel zoom trên PC
-    const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.05 : 0.05;
-        setTreeScale(prev => Math.max(0.2, Math.min(2, prev + delta)));
-      }
-    };
-
-    const container = treeContainerRef.current;
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-    }
-
-    window.addEventListener('resize', fitToScreen);
-    return () => {
-      clearInterval(pollInterval);
-      clearTimeout(fallbackTimer);
-      window.removeEventListener('resize', fitToScreen);
-      if (container) {
-        container.removeEventListener('wheel', handleWheel);
-      }
-    };
-  }, []);
+  // Không tự động zoom nữa, trả về kích thước chuẩn của web để người dùng tự cuộn hoặc dùng tính năng zoom của trình duyệt
 
   // Build Hierarchical Tree
   const buildTree = (nodes: any[], parentId: number | null = null): any[] => {
@@ -318,7 +250,6 @@ export default function Home() {
         <div 
           className="tree-scroll-area" 
           ref={treeScrollAreaRef}
-          style={treeScale !== 1 ? { transform: `scale(${treeScale})`, transformOrigin: 'top center', transition: 'transform 0.3s ease' } : {}}
         >
           {rootNodes.map(rootNode => {
             const rootLabel = (
