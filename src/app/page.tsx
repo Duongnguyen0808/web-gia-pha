@@ -13,9 +13,11 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const treeScrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
   
   // Load avatars from localStorage on mount
   useEffect(() => {
+    setIsMounted(true);
     const savedAvatars: Record<number, string> = {};
     treeData.forEach(p => {
       const stored = localStorage.getItem(`avatar_${p.id}`);
@@ -221,6 +223,14 @@ export default function Home() {
       </TreeNode>
     );
   };
+
+  if (!isMounted) {
+    return (
+      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
+        <p style={{ color: 'var(--color-gold)', fontSize: '1.2rem', fontFamily: 'var(--font-serif)' }}>Đang tải Gia phả...</p>
+      </main>
+    );
+  }
 
   return (
     <main>
