@@ -138,18 +138,60 @@ export default function Home() {
     return getHueKinshipTerm(me, targetPerson, treeData);
   };
 
+  // Hàm nén ảnh tự động trước khi upload
+  const compressImage = (file: File, maxWidth = 600, maxHeight = 600, quality = 0.85): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          } else {
+            resolve(event.target?.result as string);
+          }
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activePerson) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert("Ảnh quá lớn, vui lòng chọn ảnh dưới 2MB!");
+      // Hỗ trợ ảnh chụp điện thoại dung lượng cao lên tới 15MB
+      if (file.size > 15 * 1024 * 1024) {
+        alert("Ảnh quá lớn, vui lòng chọn ảnh dưới 15MB!");
         return;
       }
 
       setIsUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
+      try {
+        // Tự động nén ảnh xuống khoảng 100KB mà vẫn nét căng
+        const base64String = await compressImage(file, 600, 600, 0.85);
 
         // Update UI immediately
         setAvatars((prev) => ({
@@ -157,33 +199,30 @@ export default function Home() {
           [activePerson.id]: base64String,
         }));
 
-        try {
-          if (
-            !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-            process.env.NEXT_PUBLIC_SUPABASE_URL ===
-              "https://placeholder.supabase.co"
-          ) {
-            localStorage.setItem(`avatar_${activePerson.id}`, base64String);
-          } else {
-            const { error } = await supabase
-              .from("person_avatars")
-              .upsert({ person_id: activePerson.id, avatar_url: base64String });
+        if (
+          !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+          process.env.NEXT_PUBLIC_SUPABASE_URL ===
+            "https://placeholder.supabase.co"
+        ) {
+          localStorage.setItem(`avatar_${activePerson.id}`, base64String);
+        } else {
+          const { error } = await supabase
+            .from("person_avatars")
+            .upsert({ person_id: activePerson.id, avatar_url: base64String });
 
-            if (error) {
-              console.error("Lỗi khi lưu ảnh lên máy chủ:", error);
-              alert(
-                "Lỗi từ máy chủ: " + (error.message || JSON.stringify(error)),
-              );
-            }
+          if (error) {
+            console.error("Lỗi khi lưu ảnh lên máy chủ:", error);
+            alert(
+              "Lỗi từ máy chủ: " + (error.message || JSON.stringify(error)),
+            );
           }
-        } catch (err: any) {
-          console.error(err);
-          alert("Lỗi hệ thống: " + (err?.message || "Không xác định"));
-        } finally {
-          setIsUploading(false);
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err: any) {
+        console.error(err);
+        alert("Lỗi xử lý ảnh: " + (err?.message || "Không xác định"));
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
