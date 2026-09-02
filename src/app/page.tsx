@@ -50,8 +50,7 @@ export default function Home() {
       const containerHeight = window.innerHeight - treeContainerRef.current.offsetTop;
 
       const scaleX = treeWidth > containerWidth ? (containerWidth - 20) / treeWidth : 1;
-      const scaleY = treeHeight > containerHeight ? (containerHeight - 20) / treeHeight : 1;
-      const scale = Math.min(scaleX, scaleY, 1); // Không phóng to hơn 100%
+      const scale = scaleX; // Chỉ thu nhỏ vừa chiều ngang trên laptop để không bị quá nhỏ
       initialScaleRef.current = scale;
       setTreeScale(scale);
     }
@@ -106,10 +105,6 @@ export default function Home() {
       }
     };
   }, []);
-
-  const zoomIn = () => setTreeScale(prev => Math.min(2, prev + 0.1));
-  const zoomOut = () => setTreeScale(prev => Math.max(0.2, prev - 0.1));
-  const zoomReset = () => fitToScreen();
 
   // Build Hierarchical Tree
   const buildTree = (nodes: any[], parentId: number | null = null): any[] => {
@@ -317,13 +312,6 @@ export default function Home() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Nút zoom cố định */}
-      <div className="zoom-controls">
-        <button onClick={zoomIn} title="Phóng to">＋</button>
-        <button onClick={zoomReset} title="Vừa màn hình">⊡</button>
-        <button onClick={zoomOut} title="Thu nhỏ">−</button>
       </div>
 
       <div className="tree-container fade-in" style={{ animationDelay: '0.4s' }} ref={treeContainerRef}>
