@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import treeData from '../data/family-tree.json';
-import { getHueKinshipTerm } from '../utils/kinship';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import treeData from "../data/family-tree.json";
+import { getHueKinshipTerm } from "../utils/kinship";
+import { supabase } from "../lib/supabaseClient";
 
 const Tree = dynamic(
-  () => import('react-organizational-chart').then(mod => ({ default: mod.Tree })),
-  { ssr: false }
+  () =>
+    import("react-organizational-chart").then((mod) => ({ default: mod.Tree })),
+  { ssr: false },
 );
 const TreeNode = dynamic(
-  () => import('react-organizational-chart').then(mod => ({ default: mod.TreeNode })),
-  { ssr: false }
+  () =>
+    import("react-organizational-chart").then((mod) => ({
+      default: mod.TreeNode,
+    })),
+  { ssr: false },
 );
 
 export default function Home() {
@@ -26,17 +30,21 @@ export default function Home() {
   const treeScrollAreaRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   // Load avatars from Supabase (or localStorage if no key) on mount
   useEffect(() => {
     setIsMounted(true);
-    
+
     const fetchAvatars = async () => {
       try {
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+        if (
+          !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+          process.env.NEXT_PUBLIC_SUPABASE_URL ===
+            "https://placeholder.supabase.co"
+        ) {
           // Fallback to localStorage
           const savedAvatars: Record<number, string> = {};
-          treeData.forEach(p => {
+          treeData.forEach((p) => {
             const stored = localStorage.getItem(`avatar_${p.id}`);
             if (stored) savedAvatars[p.id] = stored;
           });
@@ -44,7 +52,9 @@ export default function Home() {
           return;
         }
 
-        const { data, error } = await supabase.from('person_avatars').select('*');
+        const { data, error } = await supabase
+          .from("person_avatars")
+          .select("*");
         if (data && !error) {
           const fetchedAvatars: Record<number, string> = {};
           data.forEach((row: any) => {
@@ -56,7 +66,7 @@ export default function Home() {
         console.error("Lỗi khi tải ảnh:", err);
       }
     };
-    
+
     fetchAvatars();
   }, []);
 
@@ -78,32 +88,32 @@ export default function Home() {
       // Nếu là PC hoặc điện thoại đang XOAY NGANG -> Thu nhỏ vừa màn hình
       const treeWidth = scrollArea.scrollWidth;
       const containerWidth = container.clientWidth;
-      
+
       let newScale = 1;
       if (treeWidth > 0) {
         const scaleX = (containerWidth - 40) / treeWidth;
         newScale = Math.min(scaleX, 1);
       }
-      
+
       setTreeScale(newScale);
       setIsTreeReady(true);
     });
-    
+
     observer.observe(scrollArea);
     observer.observe(container);
-    
+
     return () => observer.disconnect();
   }, [isMounted]);
   // Build Hierarchical Tree
   const buildTree = (nodes: any[], parentId: number | null = null): any[] => {
     return nodes
-      .filter(node => node.parentId === parentId && !node.spouseOf)
-      .map(node => {
-        const spouses = nodes.filter(n => n.spouseOf === node.id);
+      .filter((node) => node.parentId === parentId && !node.spouseOf)
+      .map((node) => {
+        const spouses = nodes.filter((n) => n.spouseOf === node.id);
         return {
           ...node,
           spouses,
-          children: buildTree(nodes, node.id)
+          children: buildTree(nodes, node.id),
         };
       });
   };
@@ -120,9 +130,9 @@ export default function Home() {
 
   const getCallTerm = (targetPerson: any) => {
     if (!selectedMe) return null;
-    if (selectedMe === targetPerson.id) return 'Bản thân (Tui)';
-    
-    const me = treeData.find(p => p.id === selectedMe);
+    if (selectedMe === targetPerson.id) return "Bản thân (Tui)";
+
+    const me = treeData.find((p) => p.id === selectedMe);
     if (!me) return null;
 
     return getHueKinshipTerm(me, targetPerson, treeData);
@@ -132,7 +142,7 @@ export default function Home() {
     const file = e.target.files?.[0];
     if (file && activePerson) {
       if (file.size > 2 * 1024 * 1024) {
-        alert('Ảnh quá lớn, vui lòng chọn ảnh dưới 2MB!');
+        alert("Ảnh quá lớn, vui lòng chọn ảnh dưới 2MB!");
         return;
       }
 
@@ -140,24 +150,30 @@ export default function Home() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result as string;
-        
+
         // Update UI immediately
-        setAvatars(prev => ({
+        setAvatars((prev) => ({
           ...prev,
-          [activePerson.id]: base64String
+          [activePerson.id]: base64String,
         }));
-        
+
         try {
-          if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+          if (
+            !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+            process.env.NEXT_PUBLIC_SUPABASE_URL ===
+              "https://placeholder.supabase.co"
+          ) {
             localStorage.setItem(`avatar_${activePerson.id}`, base64String);
           } else {
             const { error } = await supabase
-              .from('person_avatars')
+              .from("person_avatars")
               .upsert({ person_id: activePerson.id, avatar_url: base64String });
-              
+
             if (error) {
               console.error("Lỗi khi lưu ảnh lên máy chủ:", error);
-              alert("Lỗi từ máy chủ: " + (error.message || JSON.stringify(error)));
+              alert(
+                "Lỗi từ máy chủ: " + (error.message || JSON.stringify(error)),
+              );
             }
           }
         } catch (err: any) {
@@ -174,17 +190,24 @@ export default function Home() {
   const handleRemoveImage = async () => {
     if (activePerson) {
       setIsUploading(true);
-      setAvatars(prev => {
+      setAvatars((prev) => {
         const newAvatars = { ...prev };
         delete newAvatars[activePerson.id];
         return newAvatars;
       });
-      
+
       try {
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+        if (
+          !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+          process.env.NEXT_PUBLIC_SUPABASE_URL ===
+            "https://placeholder.supabase.co"
+        ) {
           localStorage.removeItem(`avatar_${activePerson.id}`);
         } else {
-          await supabase.from('person_avatars').delete().eq('person_id', activePerson.id);
+          await supabase
+            .from("person_avatars")
+            .delete()
+            .eq("person_id", activePerson.id);
         }
       } catch (error) {
         console.error("Lỗi xoá ảnh:", error);
@@ -200,15 +223,39 @@ export default function Home() {
 
   const getAvatarSource = (id: number, gender: string) => {
     if (avatars[id]) return avatars[id];
-    if (gender === 'male') {
+    if (gender === "male") {
       return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23c39953"><path d="M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5zm0 8c-1.654 0-3-1.346-3-3s1.346-3 3-3 3 1.346 3 3-1.346 3-3 3zm9 11v-1c0-3.859-3.141-7-7-7H10c-3.859 0-7 3.141-7 7v1h2v-1c0-2.757 2.243-5 5-5h4c2.757 0 5 2.243 5 5v1h2z"/></svg>';
     }
     return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238b2520"><path d="M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5zm0 8c-1.654 0-3-1.346-3-3s1.346-3 3-3 3 1.346 3 3-1.346 3-3 3zm9 11v-1c0-3.859-3.141-7-7-7H10c-3.859 0-7 3.141-7 7v1h2v-1c0-2.757 2.243-5 5-5h4c2.757 0 5 2.243 5 5v1h2z"/></svg>';
   };
 
   const getLunarYearName = (year: number) => {
-    const CANH = ['Canh', 'Tân', 'Nhâm', 'Quý', 'Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ'];
-    const CHI = ['Thân', 'Dậu', 'Tuất', 'Hợi', 'Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi'];
+    const CANH = [
+      "Canh",
+      "Tân",
+      "Nhâm",
+      "Quý",
+      "Giáp",
+      "Ất",
+      "Bính",
+      "Đinh",
+      "Mậu",
+      "Kỷ",
+    ];
+    const CHI = [
+      "Thân",
+      "Dậu",
+      "Tuất",
+      "Hợi",
+      "Tý",
+      "Sửu",
+      "Dần",
+      "Mão",
+      "Thìn",
+      "Tỵ",
+      "Ngọ",
+      "Mùi",
+    ];
     return `${CANH[year % 10]} ${CHI[year % 12]}`;
   };
 
@@ -216,38 +263,48 @@ export default function Home() {
     let displayName = person.name;
     // Bỏ chữ (Dâu/Rể) đối với người đời thứ 1 (Cụ Tổ / Root)
     if (person.spouseOf && person.generation > 1) {
-      const inLawRole = person.gender === 'male' ? 'Rể' : 'Dâu';
+      const inLawRole = person.gender === "male" ? "Rể" : "Dâu";
       displayName += ` (${inLawRole})`;
     }
 
-    const callTerm = selectedMe && selectedMe !== person.id ? getCallTerm(person) : null;
+    const callTerm =
+      selectedMe && selectedMe !== person.id ? getCallTerm(person) : null;
     const isMe = selectedMe === person.id;
 
     return (
-      <div 
-        key={person.id} 
-        className={`person-card ${isSelected ? 'selected' : ''} ${person.deathYear ? 'deceased' : ''}`}
+      <div
+        key={person.id}
+        className={`person-card ${isSelected ? "selected" : ""} ${person.deathYear ? "deceased" : ""}`}
         onClick={() => handlePersonClick(person)}
       >
-        <img src={getAvatarSource(person.id, person.gender)} alt={person.name} className="person-avatar" />
+        <img
+          src={getAvatarSource(person.id, person.gender)}
+          alt={person.name}
+          className="person-avatar"
+        />
         <h3 className="person-name">{displayName}</h3>
-        <p className="person-years" style={{ marginBottom: person.birthYear ? '2px' : '5px' }}>
-          {person.birthYear ? person.birthYear : '...'} - {person.deathYear ? person.deathYear : 'Nay'}
+        <p
+          className="person-years"
+          style={{ marginBottom: person.birthYear ? "2px" : "5px" }}
+        >
+          {person.birthYear ? person.birthYear : "..."} -{" "}
+          {person.deathYear ? person.deathYear : "Nay"}
         </p>
         {person.birthYear && (
-          <p className="person-lunar">
-            ({getLunarYearName(person.birthYear)})
-          </p>
+          <p className="person-lunar">({getLunarYearName(person.birthYear)})</p>
         )}
-        
+
         {/* Hiển thị xưng hô trực tiếp trong thẻ nếu đã chọn */}
         {callTerm && (
-          <div className="card-call-term">
-            Gọi là: <strong>{callTerm}</strong>
+          <div className="card-call-term" title={`Gọi là: ${callTerm}`}>
+            Gọi: <strong>{callTerm}</strong>
           </div>
         )}
         {isMe && (
-          <div className="card-call-term" style={{ background: 'var(--color-purple)'}}>
+          <div
+            className="card-call-term"
+            style={{ background: "var(--color-purple)" }}
+          >
             <strong>Đây là bạn</strong>
           </div>
         )}
@@ -258,13 +315,13 @@ export default function Home() {
   const getFamilyTitle = (node: any) => {
     if (node.familyTitle) return node.familyTitle;
     if (!node.parentId) return "Gốc Gia Phả";
-    
+
     // Tính con thứ mấy
     const siblings = treeData
-      .filter(p => p.parentId === node.parentId)
+      .filter((p) => p.parentId === node.parentId)
       .sort((a, b) => (a.birthYear || 0) - (b.birthYear || 0));
-    
-    const order = siblings.findIndex(p => p.id === node.id) + 1;
+
+    const order = siblings.findIndex((p) => p.id === node.id) + 1;
     return `Con thứ ${order}`;
   };
 
@@ -275,12 +332,13 @@ export default function Home() {
         <div className="family-unit-title">{getFamilyTitle(node)}</div>
         <div className="family-unit">
           {renderPersonCard(node, selectedMe === node.id)}
-          {node.spouses && node.spouses.map((spouse: any) => (
-             <React.Fragment key={spouse.id}>
-               <span className="spouse-connector">♥</span>
-               {renderPersonCard(spouse, selectedMe === spouse.id)}
-             </React.Fragment>
-          ))}
+          {node.spouses &&
+            node.spouses.map((spouse: any) => (
+              <React.Fragment key={spouse.id}>
+                <span className="spouse-connector">♥</span>
+                {renderPersonCard(spouse, selectedMe === spouse.id)}
+              </React.Fragment>
+            ))}
         </div>
       </div>
     );
@@ -300,8 +358,24 @@ export default function Home() {
 
   if (!isMounted) {
     return (
-      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
-        <p style={{ color: 'var(--color-gold)', fontSize: '1.2rem', fontFamily: 'var(--font-serif)' }}>Đang tải Gia phả...</p>
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--color-bg)",
+        }}
+      >
+        <p
+          style={{
+            color: "var(--color-gold)",
+            fontSize: "1.2rem",
+            fontFamily: "var(--font-serif)",
+          }}
+        >
+          Đang tải Gia phả...
+        </p>
       </main>
     );
   }
@@ -309,65 +383,109 @@ export default function Home() {
   return (
     <main>
       <div className="header-glass fade-in">
-        <h1 className="title">Gia Phả Dòng Họ Đặng</h1>
-        <p className="subtitle" style={{ animationDelay: '0.2s' }}>
+        <h1 className="title">Gia Phả Dòng Họ Đặng 4 Đời</h1>
+        <p className="subtitle" style={{ animationDelay: "0.2s" }}>
           Ông Đặng Văn Sừng & Bà Võ Thị Chanh
         </p>
 
-        <div style={{ textAlign: 'center', marginBottom: '20px' }} className="fade-in">
+        <div
+          style={{ textAlign: "center", marginBottom: "20px" }}
+          className="fade-in"
+        >
           {selectedMe ? (
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '10px 20px', borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '15px', border: '2px solid var(--color-purple)' }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-                Đang xem với vai trò: <span style={{ color: 'var(--color-red)' }}>{treeData.find(p => p.id === selectedMe)?.name}</span>
+            <div
+              style={{
+                background: "rgba(255,255,255,0.8)",
+                padding: "10px 20px",
+                borderRadius: "20px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "15px",
+                border: "2px solid var(--color-purple)",
+              }}
+            >
+              <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>
+                Đang xem với vai trò:{" "}
+                <span style={{ color: "var(--color-red)" }}>
+                  {treeData.find((p) => p.id === selectedMe)?.name}
+                </span>
               </span>
-              <button 
+              <button
                 onClick={() => setSelectedMe(null)}
-                style={{ background: '#ddd', border: 'none', padding: '5px 15px', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{
+                  background: "#ddd",
+                  border: "none",
+                  padding: "5px 15px",
+                  borderRadius: "15px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
               >
                 Hủy / Đổi người
               </button>
             </div>
           ) : (
-            <div style={{ background: 'rgba(195, 153, 83, 0.2)', padding: '10px 20px', borderRadius: '12px', display: 'inline-block', border: '1px dashed var(--color-gold)', color: 'var(--color-red)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-              💡 Mẹo: Bấm vào tên bạn trên sơ đồ và chọn "ĐÂY LÀ TÔI" để tự động tính cách xưng hô với toàn dòng họ!
+            <div
+              style={{
+                background: "rgba(195, 153, 83, 0.2)",
+                padding: "10px 20px",
+                borderRadius: "12px",
+                display: "inline-block",
+                border: "1px dashed var(--color-gold)",
+                color: "var(--color-red)",
+                fontWeight: "bold",
+                fontSize: "1.1rem",
+              }}
+            >
+              💡 Mẹo: Bấm vào tên bạn trên sơ đồ và chọn "ĐÂY LÀ TÔI" để tự động
+              tính cách xưng hô với toàn dòng họ!
             </div>
           )}
         </div>
       </div>
 
-      <div 
-        className="tree-container fade-in" 
-        style={{ 
-          animationDelay: '0.4s',
-          display: treeScale !== 1 ? 'flex' : undefined,
-          justifyContent: treeScale !== 1 ? 'center' : undefined,
-          alignItems: treeScale !== 1 ? 'flex-start' : undefined,
-          overflowX: treeScale !== 1 ? 'hidden' : 'auto',
-        }} 
+      <div
+        className="tree-container fade-in"
+        style={{
+          animationDelay: "0.4s",
+          display: treeScale !== 1 ? "flex" : undefined,
+          justifyContent: treeScale !== 1 ? "center" : undefined,
+          alignItems: treeScale !== 1 ? "flex-start" : undefined,
+          overflowX: treeScale !== 1 ? "hidden" : "auto",
+        }}
         ref={treeContainerRef}
       >
-        <div 
-          className="tree-scroll-area" 
+        <div
+          className="tree-scroll-area"
           ref={treeScrollAreaRef}
-          style={{ 
-            transform: treeScale !== 1 ? `scale(${treeScale})` : 'none', 
-            transformOrigin: 'top center',
+          style={{
+            transform: treeScale !== 1 ? `scale(${treeScale})` : "none",
+            transformOrigin: "top center",
             opacity: isTreeReady ? 1 : 0,
-            transition: 'opacity 0.5s ease'
+            transition: "opacity 0.5s ease",
           }}
         >
-          {rootNodes.map(rootNode => {
+          {rootNodes.map((rootNode) => {
             const rootLabel = (
               <div className="family-unit-wrapper">
-                <div className="family-unit-title" style={{ background: 'var(--color-gold)', color: 'var(--color-purple)'}}>Ông Bà Tổ</div>
+                <div
+                  className="family-unit-title"
+                  style={{
+                    background: "var(--color-gold)",
+                    color: "var(--color-purple)",
+                  }}
+                >
+                  Ông Bà Tổ
+                </div>
                 <div className="family-unit">
                   {renderPersonCard(rootNode, selectedMe === rootNode.id)}
-                  {rootNode.spouses && rootNode.spouses.map((spouse: any) => (
-                    <React.Fragment key={spouse.id}>
-                      <span className="spouse-connector">♥</span>
-                      {renderPersonCard(spouse, selectedMe === spouse.id)}
-                    </React.Fragment>
-                  ))}
+                  {rootNode.spouses &&
+                    rootNode.spouses.map((spouse: any) => (
+                      <React.Fragment key={spouse.id}>
+                        <span className="spouse-connector">♥</span>
+                        {renderPersonCard(spouse, selectedMe === spouse.id)}
+                      </React.Fragment>
+                    ))}
                 </div>
               </div>
             );
@@ -375,16 +493,17 @@ export default function Home() {
             return (
               <Tree
                 key={rootNode.id}
-                lineWidth={'2px'}
-                lineColor={'var(--color-gold)'}
-                lineBorderRadius={'12px'}
-                lineHeight={'30px'}
-                nodePadding={'10px'}
+                lineWidth={"2px"}
+                lineColor={"var(--color-gold)"}
+                lineBorderRadius={"12px"}
+                lineHeight={"30px"}
+                nodePadding={"10px"}
                 label={rootLabel}
               >
-                {rootNode.children && rootNode.children.map((child: any) => (
-                  <TreeNodeRender key={child.id} node={child} />
-                ))}
+                {rootNode.children &&
+                  rootNode.children.map((child: any) => (
+                    <TreeNodeRender key={child.id} node={child} />
+                  ))}
               </Tree>
             );
           })}
@@ -394,27 +513,37 @@ export default function Home() {
       {/* Modal Profile */}
       {activePerson && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={closeModal}>×</button>
-            
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={closeModal}>
+              ×
+            </button>
+
             <div className="modal-avatar-container">
-              <img 
-                src={getAvatarSource(activePerson.id, activePerson.gender)} 
-                alt={activePerson.name} 
-                className="modal-avatar" 
+              <img
+                src={getAvatarSource(activePerson.id, activePerson.gender)}
+                alt={activePerson.name}
+                className="modal-avatar"
               />
-              <button className="upload-btn" onClick={triggerFileInput} title="Tải ảnh lên">
+              <button
+                className="upload-btn"
+                onClick={triggerFileInput}
+                title="Tải ảnh lên"
+              >
                 📷
               </button>
               {avatars[activePerson.id] && (
-                <button className="delete-btn" onClick={handleRemoveImage} title="Xóa ảnh">
+                <button
+                  className="delete-btn"
+                  onClick={handleRemoveImage}
+                  title="Xóa ảnh"
+                >
                   ❌
                 </button>
               )}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="file-input" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="file-input"
                 accept="image/*"
                 onChange={handleImageUpload}
               />
@@ -423,15 +552,30 @@ export default function Home() {
             <h2 className="modal-name">{activePerson.name}</h2>
             <p className="modal-role">Đời thứ {activePerson.generation}</p>
             <div className="modal-desc">
-              <p><strong>Năm sinh:</strong> {activePerson.birthYear || 'Chưa rõ'}</p>
-              <p><strong>Thông tin:</strong> {activePerson.description}</p>
+              <p>
+                <strong>Năm sinh:</strong> {activePerson.birthYear || "Chưa rõ"}
+              </p>
+              <p>
+                <strong>Thông tin:</strong> {activePerson.description}
+              </p>
             </div>
-            
+
             {/* Hiển thị xưng hô bên trong modal cho rõ ràng hơn nếu đã chọn ở ngoài */}
             {selectedMe && selectedMe !== activePerson.id && (
-              <div style={{ marginTop: '15px', padding: '10px', background: 'rgba(195, 153, 83, 0.1)', borderRadius: '8px', border: '1px dashed var(--color-gold)' }}>
+              <div
+                style={{
+                  marginTop: "15px",
+                  padding: "10px",
+                  background: "rgba(195, 153, 83, 0.1)",
+                  borderRadius: "8px",
+                  border: "1px dashed var(--color-gold)",
+                }}
+              >
                 <p>Bạn gọi người này là:</p>
-                <div className="call-term" style={{ fontSize: '1.3rem', padding: '10px 20px' }}>
+                <div
+                  className="call-term"
+                  style={{ fontSize: "1.3rem", padding: "10px 20px" }}
+                >
                   {getCallTerm(activePerson)}
                 </div>
               </div>
@@ -439,30 +583,38 @@ export default function Home() {
 
             {/* Nút Đặt đây là tôi */}
             {selectedMe !== activePerson.id && (
-              <button 
+              <button
                 onClick={() => {
                   setSelectedMe(activePerson.id);
                   closeModal();
                 }}
                 style={{
-                  marginTop: '20px',
-                  width: '100%',
-                  padding: '12px',
-                  background: 'var(--color-purple)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1.2rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 15px rgba(74, 44, 90, 0.3)'
+                  marginTop: "20px",
+                  width: "100%",
+                  padding: "12px",
+                  background: "var(--color-purple)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "1.2rem",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 15px rgba(74, 44, 90, 0.3)",
                 }}
               >
                 🙋‍♂️ ĐẶT ĐÂY LÀ TÔI
               </button>
             )}
             {selectedMe === activePerson.id && (
-              <div style={{ marginTop: '20px', padding: '12px', background: '#ddd', borderRadius: '8px', fontWeight: 'bold' }}>
+              <div
+                style={{
+                  marginTop: "20px",
+                  padding: "12px",
+                  background: "#ddd",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                }}
+              >
                 ✅ Đang đóng vai người này
               </div>
             )}

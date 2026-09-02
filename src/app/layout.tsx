@@ -1,8 +1,8 @@
-import './globals.css';
+import "./globals.css";
 
 export const metadata = {
-  title: 'Gia Phả Dòng Họ | Phong Cách Huế',
-  description: 'Trang web gia phả dòng họ, lưu giữ truyền thống gia đình.',
+  title: "Gia Phả Dòng Họ Đặng 4 Đời",
+  description: "Trang web gia phả dòng họ, lưu giữ truyền thống gia đình.",
 };
 
 export default function RootLayout({

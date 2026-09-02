@@ -28,7 +28,7 @@ export function getHueKinshipTerm(
 
   // CÙNG THẾ HỆ (genDiff === 0)
   if (genDiff === 0) {
-    if (me.spouseOf === target.id) return target.gender === 'male' ? 'Chồng' : 'Vợ';
+    if (me.spouseOf === target.id || target.spouseOf === me.id) return target.gender === 'male' ? 'Chồng' : 'Vợ';
     if (me.id === target.id) return 'Bản thân';
     
     // So sánh tuổi của người gốc máu
