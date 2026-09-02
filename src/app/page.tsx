@@ -57,11 +57,26 @@ export default function Home() {
       }
     };
 
-    // Chờ Tree dynamic import render xong rồi mới tính scale
-    setTimeout(updateScale, 500);
-    setTimeout(updateScale, 1500); // Chạy lại lần nữa để chắc chắn
+    // Dùng MutationObserver để phát hiện khi Tree đã render xong
+    let scaled = false;
+    const observer = new MutationObserver(() => {
+      if (!scaled && treeScrollAreaRef.current && treeScrollAreaRef.current.children.length > 0) {
+        scaled = true;
+        setTimeout(updateScale, 100); // Chờ thêm chút để DOM ổn định
+        observer.disconnect();
+      }
+    });
+
+    if (treeScrollAreaRef.current) {
+      observer.observe(treeScrollAreaRef.current, { childList: true, subtree: true });
+    }
+
+    // Chỉ tính lại khi resize cửa sổ thật sự
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      observer.disconnect();
+    };
   }, []);
 
   // Build Hierarchical Tree
