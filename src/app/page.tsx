@@ -18,6 +18,8 @@ export default function Home() {
   const [selectedMe, setSelectedMe] = useState<number | null>(null);
   const [activePerson, setActivePerson] = useState<any | null>(null);
   const [avatars, setAvatars] = useState<Record<number, string>>({});
+  const [treeScale, setTreeScale] = useState(1);
+  const [isTreeReady, setIsTreeReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const treeScrollAreaRef = useRef<HTMLDivElement>(null);
@@ -36,8 +38,39 @@ export default function Home() {
     setAvatars(savedAvatars);
   }, []);
 
-  // Không tự động zoom nữa, trả về kích thước chuẩn của web để người dùng tự cuộn hoặc dùng tính năng zoom của trình duyệt
+  // Tự động thu nhỏ vừa màn hình trên PC khi vừa vào
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsTreeReady(true);
+      return;
+    }
+    
+    const container = treeContainerRef.current;
+    const scrollArea = treeScrollAreaRef.current;
+    if (!container || !scrollArea) return;
 
+    const observer = new ResizeObserver(() => {
+      const treeWidth = scrollArea.scrollWidth;
+      const treeHeight = scrollArea.scrollHeight;
+      const containerWidth = container.clientWidth;
+      const containerHeight = window.innerHeight - container.offsetTop;
+      
+      let newScale = 1;
+      if (treeWidth > 0 && treeHeight > 0) {
+        // Thu nhỏ để vừa cả chiều ngang lẫn chiều dọc
+        const scaleX = (containerWidth - 40) / treeWidth;
+        const scaleY = (containerHeight - 40) / treeHeight;
+        newScale = Math.min(scaleX, scaleY, 1);
+      }
+      
+      setTreeScale(newScale);
+      setIsTreeReady(true);
+    });
+    
+    observer.observe(scrollArea);
+    
+    return () => observer.disconnect();
+  }, [isMounted]);
   // Build Hierarchical Tree
   const buildTree = (nodes: any[], parentId: number | null = null): any[] => {
     return nodes
@@ -250,6 +283,12 @@ export default function Home() {
         <div 
           className="tree-scroll-area" 
           ref={treeScrollAreaRef}
+          style={{ 
+            transform: treeScale !== 1 ? `scale(${treeScale})` : 'none', 
+            transformOrigin: 'top center',
+            opacity: isTreeReady ? 1 : 0,
+            transition: 'opacity 0.5s ease'
+          }}
         >
           {rootNodes.map(rootNode => {
             const rootLabel = (
