@@ -57,7 +57,9 @@ export default function Home() {
       }
     };
 
-    setTimeout(updateScale, 100);
+    // Chờ Tree dynamic import render xong rồi mới tính scale
+    setTimeout(updateScale, 500);
+    setTimeout(updateScale, 1500); // Chạy lại lần nữa để chắc chắn
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
