@@ -57,10 +57,10 @@ export default function Home() {
       
       let newScale = 1;
       if (treeWidth > 0 && treeHeight > 0) {
-        // Thu nhỏ nhưng giữ mức tối thiểu là 85% để không bị quá nhỏ chữ
+        // Thu nhỏ để vừa cả chiều ngang lẫn chiều dọc (thấy toàn bộ cây)
         const scaleX = (containerWidth - 40) / treeWidth;
         const scaleY = (containerHeight - 40) / treeHeight;
-        newScale = Math.max(0.85, Math.min(scaleX, scaleY, 1));
+        newScale = Math.min(scaleX, scaleY, 1);
       }
       
       setTreeScale(newScale);

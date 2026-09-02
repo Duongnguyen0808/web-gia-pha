@@ -100,7 +100,10 @@ h1, h2, h3, h4, h5, h6 {
 @media (min-width: 1024px) {
   .tree-container {
     min-height: calc(100vh - 200px);
-    /* Bỏ flexbox và overflow hidden để có thể cuộn khi cây quá to */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden; /* Ẩn thanh cuộn thừa trên PC vì đã scale vừa màn hình */
   }
 }
 
