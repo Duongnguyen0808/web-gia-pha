@@ -93,22 +93,20 @@ h1, h2, h3, h4, h5, h6 {
 .tree-container {
   width: 100vw;
   padding: 20px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+  overflow: auto;
+  text-align: center; /* Căn giữa tree khi nhỏ */
 }
 
 @media (min-width: 1024px) {
   .tree-container {
     min-height: calc(100vh - 200px);
-    overflow: auto;
   }
 }
 
 .tree-scroll-area {
   display: inline-block;
   min-width: max-content;
-  margin: 0 auto; /* Tự động căn giữa nếu nhỏ, và cho phép cuộn từ trái nếu lớn */
+  text-align: left; /* Reset text-align cho nội dung bên trong */
   padding-bottom: 50px;
 }
 
