@@ -159,7 +159,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 12px;
   padding: 12px 5px;
   width: 130px;
-  height: 205px; /* Kích thước chuẩn, đẹp mắt */
+  min-height: 205px; /* Cho phép thẻ tự giãn ra nếu nội dung dài */
+  height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
