@@ -1,9 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import treeData from '../data/family-tree.json';
 import { getHueKinshipTerm } from '../utils/kinship';
-import { Tree, TreeNode } from 'react-organizational-chart';
+
+const Tree = dynamic(
+  () => import('react-organizational-chart').then(mod => ({ default: mod.Tree })),
+  { ssr: false }
+);
+const TreeNode = dynamic(
+  () => import('react-organizational-chart').then(mod => ({ default: mod.TreeNode })),
+  { ssr: false }
+);
 
 export default function Home() {
   const [selectedMe, setSelectedMe] = useState<number | null>(null);
