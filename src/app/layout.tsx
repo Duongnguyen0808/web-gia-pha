@@ -3,6 +3,11 @@ import "./globals.css";
 export const metadata = {
   title: "Gia Phả Dòng Họ Đặng 4 Đời",
   description: "Trang web gia phả dòng họ, lưu giữ truyền thống gia đình.",
+  openGraph: {
+    title: "Gia Phả Dòng Họ Đặng 4 Đời",
+    description: "Trang web gia phả dòng họ, lưu giữ truyền thống gia đình.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
