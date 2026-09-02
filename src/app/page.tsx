@@ -335,7 +335,17 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="tree-container fade-in" style={{ animationDelay: '0.4s' }} ref={treeContainerRef}>
+      <div 
+        className="tree-container fade-in" 
+        style={{ 
+          animationDelay: '0.4s',
+          display: treeScale !== 1 ? 'flex' : undefined,
+          justifyContent: treeScale !== 1 ? 'center' : undefined,
+          alignItems: treeScale !== 1 ? 'flex-start' : undefined,
+          overflowX: treeScale !== 1 ? 'hidden' : 'auto',
+        }} 
+        ref={treeContainerRef}
+      >
         <div 
           className="tree-scroll-area" 
           ref={treeScrollAreaRef}

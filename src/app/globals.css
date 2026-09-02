@@ -95,17 +95,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 20px;
   overflow: auto;
   text-align: center; /* Căn giữa tree khi nhỏ */
-}
-
-@media (min-width: 1024px) {
-  .tree-container {
-    min-height: calc(100vh - 200px);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow-x: hidden; /* Cây đã scale vừa chiều ngang nên ẩn cuộn ngang */
-    overflow-y: auto; /* Cho phép cuộn dọc vì cây có thể rất dài */
-  }
+  min-height: calc(100vh - 200px);
 }
 
 .tree-scroll-area {
