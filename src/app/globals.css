@@ -45,7 +45,6 @@ body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -104,7 +103,7 @@ h1, h2, h3, h4, h5, h6 {
 @media (min-width: 1024px) {
   .tree-container {
     justify-content: center; /* PC thì căn giữa vì đã có tính năng tự zoom out vừa khung */
-    overflow: hidden; /* Ẩn thanh cuộn vì đã zoom vừa khung */
+    overflow: auto; /* Vẫn cho phép cuộn nếu cây lớn */
   }
 }
 
