@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import treeData from '../data/family-tree.json';
 import { getHueKinshipTerm } from '../utils/kinship';
+import { supabase } from '../lib/supabaseClient';
 
 const Tree = dynamic(
   () => import('react-organizational-chart').then(mod => ({ default: mod.Tree })),
@@ -24,18 +25,39 @@ export default function Home() {
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const treeScrollAreaRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
-  // Load avatars from localStorage on mount
+  // Load avatars from Supabase (or localStorage if no key) on mount
   useEffect(() => {
     setIsMounted(true);
-    const savedAvatars: Record<number, string> = {};
-    treeData.forEach(p => {
-      const stored = localStorage.getItem(`avatar_${p.id}`);
-      if (stored) {
-        savedAvatars[p.id] = stored;
+    
+    const fetchAvatars = async () => {
+      try {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+          // Fallback to localStorage
+          const savedAvatars: Record<number, string> = {};
+          treeData.forEach(p => {
+            const stored = localStorage.getItem(`avatar_${p.id}`);
+            if (stored) savedAvatars[p.id] = stored;
+          });
+          setAvatars(savedAvatars);
+          return;
+        }
+
+        const { data, error } = await supabase.from('person_avatars').select('*');
+        if (data && !error) {
+          const fetchedAvatars: Record<number, string> = {};
+          data.forEach((row: any) => {
+            fetchedAvatars[row.person_id] = row.avatar_url;
+          });
+          setAvatars(fetchedAvatars);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải ảnh:", err);
       }
-    });
-    setAvatars(savedAvatars);
+    };
+    
+    fetchAvatars();
   }, []);
 
   // Tự động điều chỉnh khi xoay điện thoại hoặc mở trên PC
@@ -106,36 +128,68 @@ export default function Home() {
     return getHueKinshipTerm(me, targetPerson, treeData);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activePerson) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Ảnh quá lớn, vui lòng chọn ảnh dưới 2MB!');
+        return;
+      }
+
+      setIsUploading(true);
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64String = reader.result as string;
         
+        // Update UI immediately
         setAvatars(prev => ({
           ...prev,
           [activePerson.id]: base64String
         }));
         
         try {
-          localStorage.setItem(`avatar_${activePerson.id}`, base64String);
+          if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+            localStorage.setItem(`avatar_${activePerson.id}`, base64String);
+          } else {
+            const { error } = await supabase
+              .from('person_avatars')
+              .upsert({ person_id: activePerson.id, avatar_url: base64String });
+              
+            if (error) {
+              console.error("Lỗi khi lưu ảnh lên máy chủ:", error);
+              alert("Có lỗi khi lưu ảnh lên máy chủ chung!");
+            }
+          }
         } catch (err) {
-          alert('Không thể lưu ảnh do dung lượng quá lớn, vui lòng chọn ảnh nhẹ hơn.');
+          console.error(err);
+        } finally {
+          setIsUploading(false);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = async () => {
     if (activePerson) {
+      setIsUploading(true);
       setAvatars(prev => {
         const newAvatars = { ...prev };
         delete newAvatars[activePerson.id];
         return newAvatars;
       });
-      localStorage.removeItem(`avatar_${activePerson.id}`);
+      
+      try {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+          localStorage.removeItem(`avatar_${activePerson.id}`);
+        } else {
+          await supabase.from('person_avatars').delete().eq('person_id', activePerson.id);
+        }
+      } catch (error) {
+        console.error("Lỗi xoá ảnh:", error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
