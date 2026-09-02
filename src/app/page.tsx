@@ -38,44 +38,56 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const updateScale = () => {
+    const calculateScale = () => {
       if (window.innerWidth < 1024) {
         setTreeScale(1);
         return;
       }
       if (treeContainerRef.current && treeScrollAreaRef.current) {
         treeScrollAreaRef.current.style.transform = 'scale(1)';
+        treeScrollAreaRef.current.style.transformOrigin = 'top center';
         const treeWidth = treeScrollAreaRef.current.scrollWidth;
+        const treeHeight = treeScrollAreaRef.current.scrollHeight;
         const containerWidth = treeContainerRef.current.clientWidth;
+        const containerHeight = window.innerHeight - treeContainerRef.current.offsetTop;
 
-        if (treeWidth > containerWidth) {
-          const scale = (containerWidth - 20) / treeWidth;
-          setTreeScale(scale);
-        } else {
-          setTreeScale(1);
-        }
+        const scaleX = treeWidth > containerWidth ? (containerWidth - 20) / treeWidth : 1;
+        const scaleY = treeHeight > containerHeight ? (containerHeight - 20) / treeHeight : 1;
+        const scale = Math.min(scaleX, scaleY);
+        setTreeScale(scale);
       }
     };
 
-    // Dùng MutationObserver để phát hiện khi Tree đã render xong
-    let scaled = false;
-    const observer = new MutationObserver(() => {
-      if (!scaled && treeScrollAreaRef.current && treeScrollAreaRef.current.children.length > 0) {
-        scaled = true;
-        setTimeout(updateScale, 100); // Chờ thêm chút để DOM ổn định
-        observer.disconnect();
+    // Đợi cây render ổn định (kích thước không đổi nữa) rồi mới zoom
+    let lastWidth = 0;
+    let stableCount = 0;
+    const pollInterval = setInterval(() => {
+      if (treeScrollAreaRef.current) {
+        const currentWidth = treeScrollAreaRef.current.scrollWidth;
+        if (currentWidth > 0 && currentWidth === lastWidth) {
+          stableCount++;
+          if (stableCount >= 3) { // Ổn định 3 lần liên tiếp = render xong
+            clearInterval(pollInterval);
+            calculateScale();
+          }
+        } else {
+          stableCount = 0;
+          lastWidth = currentWidth;
+        }
       }
-    });
+    }, 200);
 
-    if (treeScrollAreaRef.current) {
-      observer.observe(treeScrollAreaRef.current, { childList: true, subtree: true });
-    }
+    // Dọn dẹp sau 5 giây nếu vẫn chưa ổn
+    const fallbackTimer = setTimeout(() => {
+      clearInterval(pollInterval);
+      calculateScale();
+    }, 5000);
 
-    // Chỉ tính lại khi resize cửa sổ thật sự
-    window.addEventListener('resize', updateScale);
+    window.addEventListener('resize', calculateScale);
     return () => {
-      window.removeEventListener('resize', updateScale);
-      observer.disconnect();
+      clearInterval(pollInterval);
+      clearTimeout(fallbackTimer);
+      window.removeEventListener('resize', calculateScale);
     };
   }, []);
 
