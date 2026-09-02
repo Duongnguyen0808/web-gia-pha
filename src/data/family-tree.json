@@ -1,0 +1,43 @@
+[
+  { "id": 1, "name": "Đặng Văn Sừng", "birthYear": 1932, "deathYear": 2026, "gender": "male", "generation": 1, "parentId": null, "description": "Cha. Niên canh: Nhâm Thân. Tạ tuế lúc 18h5p ngày 14/7 âm lịch năm Bính Ngọ (2026). Hưởng thọ 95 tuổi." },
+  { "id": 2, "name": "Võ Thị Chanh", "birthYear": 1937, "gender": "female", "generation": 1, "spouseOf": 1, "description": "Mẹ. Niên canh: Đinh Sửu." },
+  
+  { "id": 3, "name": "Đặng Thị Phước", "birthYear": 1964, "gender": "female", "generation": 2, "parentId": 1, "description": "Con Gái. Niên canh: Giáp Thìn." },
+  { "id": 4, "name": "Trần Văn Lượm", "birthYear": 1967, "gender": "male", "generation": 2, "spouseOf": 3, "description": "Con Rể. Quê: Lê Văn Long, Cần giuộc, Long An." },
+  
+  { "id": 5, "name": "Nguyễn Nhất Linh", "birthYear": 1991, "gender": "male", "generation": 3, "parentId": 3, "description": "Cháu trai con Phước." },
+  { "id": 6, "name": "Trần Đặng Nghĩa", "birthYear": 2000, "gender": "male", "generation": 3, "parentId": 3, "description": "Cháu trai con Phước." },
+  { "id": 7, "name": "Trần Đặng Bảo Trâm", "birthYear": 2005, "gender": "female", "generation": 3, "parentId": 3, "description": "Cháu gái con Phước." },
+
+  { "id": 8, "name": "Đặng Văn Phú", "birthYear": 1967, "gender": "male", "generation": 2, "parentId": 1, "description": "Con Trai. Niên canh: Đinh Mùi." },
+  { "id": 9, "name": "Nguyễn Thị Hằng", "birthYear": 1971, "gender": "female", "generation": 2, "spouseOf": 8, "description": "Con Dâu. Quê: Nguyễn Văn Lúa, Thôn Mỹ lam, Xã Phú mỹ, P.Vang, TT Huế." },
+
+  { "id": 10, "name": "Đặng Nhật Tài", "birthYear": 1993, "gender": "male", "generation": 3, "parentId": 8, "description": "Cháu trai con Phú." },
+  { "id": 27, "name": "Kim Anh", "birthYear": null, "gender": "female", "generation": 3, "spouseOf": 10, "description": "Vợ Tài." },
+  { "id": 28, "name": "Đặng Nhật Bình An", "birthYear": 2020, "gender": "male", "generation": 4, "parentId": 10, "description": "Con của Tài + Kim Anh." },
+  { "id": 29, "name": "Đặng Nhật Bảo Nhi", "birthYear": 2026, "gender": "female", "generation": 4, "parentId": 10, "description": "Con của Tài + Kim Anh." },
+  
+  { "id": 11, "name": "Đặng Quang Lộc", "birthYear": 1999, "gender": "male", "generation": 3, "parentId": 8, "description": "Cháu trai con Phú." },
+  
+  { "id": 12, "name": "Đặng Văn Hữu", "birthYear": 1969, "gender": "male", "generation": 2, "parentId": 1, "description": "Con Trai. Niên canh: Kỷ Dậu." },
+  { "id": 13, "name": "Phạm Thị Ty", "birthYear": 1975, "gender": "female", "generation": 2, "spouseOf": 12, "description": "Con Dâu. Quê: Phan Văn Chấn, Thôn Diên đại, Phú Xuân, TT Huế." },
+  
+  { "id": 14, "name": "Đặng Hữu Phúc", "birthYear": 1999, "gender": "male", "generation": 3, "parentId": 12, "description": "Cháu trai con Hữu." },
+  { "id": 15, "name": "Đặng Thị Lim", "birthYear": 2002, "gender": "female", "generation": 3, "parentId": 12, "description": "Cháu gái con Hữu." },
+  { "id": 16, "name": "Đặng Quỳnh Như", "birthYear": 2015, "gender": "female", "generation": 3, "parentId": 12, "description": "Cháu gái con Hữu." },
+  
+  { "id": 17, "name": "Đặng Văn Hiệu", "birthYear": 1969, "gender": "male", "generation": 2, "parentId": 1, "description": "Con Trai. Niên canh: Kỷ Dậu." },
+  { "id": 18, "name": "Dương Thị Kim Hoa", "birthYear": 1975, "gender": "female", "generation": 2, "spouseOf": 17, "description": "Con Dâu. Quê: Dương Bá Văn, Lộc Ninh, Bình Phước." },
+  
+  { "id": 19, "name": "Đặng Dương Nguyên", "birthYear": 2004, "gender": "male", "generation": 3, "parentId": 17, "description": "Cháu trai con Hiệu." },
+  { "id": 20, "name": "Đặng Kim Ngân", "birthYear": 2012, "gender": "female", "generation": 3, "parentId": 17, "description": "Cháu gái con Hiệu." },
+  
+  { "id": 21, "name": "Đặng Thị Thu Liên", "birthYear": 1972, "gender": "female", "generation": 2, "parentId": 1, "description": "Con Gái. Niên canh: Nhâm Tý." },
+  { "id": 22, "name": "Nguyễn Thanh Hải (Nghĩa)", "birthYear": 1973, "gender": "male", "generation": 2, "spouseOf": 21, "description": "Con Rể. Quê: Nguyễn Văn Mai, Xã Hưng nhượng, Giồng trôm, Bến tre." },
+  
+  { "id": 23, "name": "Đặng Thị Bé (Thanh)", "birthYear": 1978, "gender": "female", "generation": 2, "parentId": 1, "description": "Con Gái. Niên canh: Mậu Ngọ." },
+  { "id": 24, "name": "Lê Văn Cột", "birthYear": 1977, "gender": "male", "generation": 2, "spouseOf": 23, "description": "Con Rể. Quê: Lê Văn Tuấn, Phú Xuân, P.Vang, TT Huế." },
+  
+  { "id": 25, "name": "Lê Đặng Thục Trinh", "birthYear": 2003, "gender": "female", "generation": 3, "parentId": 23, "description": "Cháu gái con Bé." },
+  { "id": 26, "name": "Lê Thành Công", "birthYear": 2006, "gender": "male", "generation": 3, "parentId": 23, "description": "Cháu trai con Bé." }
+]
