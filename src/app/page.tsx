@@ -37,28 +37,28 @@ export default function Home() {
     setAvatars(savedAvatars);
   }, []);
 
+  // Auto-fit khi load + cho phép zoom tùy thích
+  const initialScaleRef = useRef<number>(1);
+
+  const fitToScreen = () => {
+    if (treeContainerRef.current && treeScrollAreaRef.current) {
+      treeScrollAreaRef.current.style.transform = 'scale(1)';
+      treeScrollAreaRef.current.style.transformOrigin = 'top center';
+      const treeWidth = treeScrollAreaRef.current.scrollWidth;
+      const treeHeight = treeScrollAreaRef.current.scrollHeight;
+      const containerWidth = treeContainerRef.current.clientWidth;
+      const containerHeight = window.innerHeight - treeContainerRef.current.offsetTop;
+
+      const scaleX = treeWidth > containerWidth ? (containerWidth - 20) / treeWidth : 1;
+      const scaleY = treeHeight > containerHeight ? (containerHeight - 20) / treeHeight : 1;
+      const scale = Math.min(scaleX, scaleY, 1); // Không phóng to hơn 100%
+      initialScaleRef.current = scale;
+      setTreeScale(scale);
+    }
+  };
+
   useEffect(() => {
-    const calculateScale = () => {
-      if (window.innerWidth < 1024) {
-        setTreeScale(1);
-        return;
-      }
-      if (treeContainerRef.current && treeScrollAreaRef.current) {
-        treeScrollAreaRef.current.style.transform = 'scale(1)';
-        treeScrollAreaRef.current.style.transformOrigin = 'top center';
-        const treeWidth = treeScrollAreaRef.current.scrollWidth;
-        const treeHeight = treeScrollAreaRef.current.scrollHeight;
-        const containerWidth = treeContainerRef.current.clientWidth;
-        const containerHeight = window.innerHeight - treeContainerRef.current.offsetTop;
-
-        const scaleX = treeWidth > containerWidth ? (containerWidth - 20) / treeWidth : 1;
-        const scaleY = treeHeight > containerHeight ? (containerHeight - 20) / treeHeight : 1;
-        const scale = Math.min(scaleX, scaleY);
-        setTreeScale(scale);
-      }
-    };
-
-    // Đợi cây render ổn định (kích thước không đổi nữa) rồi mới zoom
+    // Đợi cây render ổn định rồi mới fit
     let lastWidth = 0;
     let stableCount = 0;
     const pollInterval = setInterval(() => {
@@ -66,9 +66,9 @@ export default function Home() {
         const currentWidth = treeScrollAreaRef.current.scrollWidth;
         if (currentWidth > 0 && currentWidth === lastWidth) {
           stableCount++;
-          if (stableCount >= 3) { // Ổn định 3 lần liên tiếp = render xong
+          if (stableCount >= 3) {
             clearInterval(pollInterval);
-            calculateScale();
+            fitToScreen();
           }
         } else {
           stableCount = 0;
@@ -77,19 +77,39 @@ export default function Home() {
       }
     }, 200);
 
-    // Dọn dẹp sau 5 giây nếu vẫn chưa ổn
     const fallbackTimer = setTimeout(() => {
       clearInterval(pollInterval);
-      calculateScale();
+      fitToScreen();
     }, 5000);
 
-    window.addEventListener('resize', calculateScale);
+    // Scroll wheel zoom trên PC
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.05 : 0.05;
+        setTreeScale(prev => Math.max(0.2, Math.min(2, prev + delta)));
+      }
+    };
+
+    const container = treeContainerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
+
+    window.addEventListener('resize', fitToScreen);
     return () => {
       clearInterval(pollInterval);
       clearTimeout(fallbackTimer);
-      window.removeEventListener('resize', calculateScale);
+      window.removeEventListener('resize', fitToScreen);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
     };
   }, []);
+
+  const zoomIn = () => setTreeScale(prev => Math.min(2, prev + 0.1));
+  const zoomOut = () => setTreeScale(prev => Math.max(0.2, prev - 0.1));
+  const zoomReset = () => fitToScreen();
 
   // Build Hierarchical Tree
   const buildTree = (nodes: any[], parentId: number | null = null): any[] => {
@@ -297,6 +317,13 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Nút zoom cố định */}
+      <div className="zoom-controls">
+        <button onClick={zoomIn} title="Phóng to">＋</button>
+        <button onClick={zoomReset} title="Vừa màn hình">⊡</button>
+        <button onClick={zoomOut} title="Thu nhỏ">−</button>
       </div>
 
       <div className="tree-container fade-in" style={{ animationDelay: '0.4s' }} ref={treeContainerRef}>
