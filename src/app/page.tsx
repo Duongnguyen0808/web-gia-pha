@@ -157,11 +157,12 @@ export default function Home() {
               
             if (error) {
               console.error("Lỗi khi lưu ảnh lên máy chủ:", error);
-              alert("Có lỗi khi lưu ảnh lên máy chủ chung!");
+              alert("Lỗi từ máy chủ: " + (error.message || JSON.stringify(error)));
             }
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error(err);
+          alert("Lỗi hệ thống: " + (err?.message || "Không xác định"));
         } finally {
           setIsUploading(false);
         }
