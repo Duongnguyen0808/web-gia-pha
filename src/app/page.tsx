@@ -57,10 +57,10 @@ export default function Home() {
       
       let newScale = 1;
       if (treeWidth > 0 && treeHeight > 0) {
-        // Thu nhỏ để vừa cả chiều ngang lẫn chiều dọc (thấy toàn bộ cây)
+        // Chỉ thu nhỏ để vừa khít chiều ngang (không cần kéo trái phải)
+        // Bỏ giới hạn chiều dọc để cây to hơn và người dùng có thể cuộn dọc
         const scaleX = (containerWidth - 40) / treeWidth;
-        const scaleY = (containerHeight - 40) / treeHeight;
-        newScale = Math.min(scaleX, scaleY, 1);
+        newScale = Math.min(scaleX, 1);
       }
       
       setTreeScale(newScale);

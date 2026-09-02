@@ -103,7 +103,8 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    overflow: hidden; /* Ẩn thanh cuộn thừa trên PC vì đã scale vừa màn hình */
+    overflow-x: hidden; /* Cây đã scale vừa chiều ngang nên ẩn cuộn ngang */
+    overflow-y: auto; /* Cho phép cuộn dọc vì cây có thể rất dài */
   }
 }
 
